@@ -79,4 +79,11 @@ dbutils.fs.ls(f"{working_directory}/output/")
 
 # COMMAND ----------
 
+from e2e_test.movie_analysis_bronze import test_write_e2e
+
+test_write_e2e(dbutils.fs.ls(f"{working_directory}/output"), spark, display)
+
+
+# COMMAND ----------
+
 
