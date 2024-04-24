@@ -65,6 +65,11 @@ display(df)
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ## Write dataframe to parquet format in output dir
+
+# COMMAND ----------
+
 def write(input_df: DataFrame):
     out_dir = f"{working_directory}/output/"
     mode_name = "overwrite"
@@ -79,10 +84,16 @@ dbutils.fs.ls(f"{working_directory}/output/")
 
 # COMMAND ----------
 
-from e2e_test.movie_analysis_bronze import test_write_e2e
+# MAGIC %run ./e2e_tests/movie_analysis_bronze
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## E2E Tests
+
+# COMMAND ----------
 
 test_write_e2e(dbutils.fs.ls(f"{working_directory}/output"), spark, display)
-
 
 # COMMAND ----------
 
