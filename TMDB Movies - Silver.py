@@ -306,6 +306,28 @@ display(output_df)
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC # Add release_year column based release_date column
+
+# COMMAND ----------
+
+from pyspark.sql import DataFrame
+
+def cast_release_date(input_df: DataFrame) -> DataFrame:
+  return input_df.withColumn("release_year", to_timestamp(input_df["release_date"])).withColumn("release_year", year(col('release_year')))
+
+output_df =  df \
+.transform(fix_data_types_on_movie_schema) \
+.transform(flatten_genres) \
+.transform(flatten_keywords) \
+.transform(flatten_production_companies) \
+.transform(flatten_production_countries) \
+.transform(cast_release_date)
+
+display(output_df)
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC ## Write flattened JSON values to output dir
 
 # COMMAND ----------

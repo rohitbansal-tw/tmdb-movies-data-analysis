@@ -169,17 +169,17 @@ display(output_df)
 
 # COMMAND ----------
 
-def movies_by_production_company_df(intput_df: DataFrame) -> DataFrame:
-    movies_production_company_df = (
-        intput_df.select("id", "production_company_name")
-        .distinct()
-        .groupBy("production_company_name")
-        .count()
-    )
-    return movies_production_company_df
+def movies_by_production_company_df(input_df: DataFrame) -> DataFrame:
+    return input_df.select("id", "production_company_name") \
+        .distinct() \
+        .groupBy("production_company_name") \
+        .count().withColumnRenamed("count", "count_movies") \
+        .orderBy(col("count_movies").desc())
 
+output_df = df\
+    .transform(movies_by_production_company_df)
 
-display(movies_by_production_company_df(df))
+display(output_df)
 
 # COMMAND ----------
 
@@ -188,13 +188,31 @@ display(movies_by_production_company_df(df))
 
 # COMMAND ----------
 
-def popular_movie_by_country(intput_df: DataFrame) -> DataFrame:
-    popular_movie_by_country_df = intput_df.select(
-        "production_country_name", "original_title", "popularity"
-    ).distinct().groupBy("production_country_name").max("popularity")
-    # Russia - 42.53
-    # Fiji - 9.7
+from pyspark.sql.functions import first
+
+def popular_movie_by_country(input_df: DataFrame) -> DataFrame:
+    window_country = Window.partitionBy("production_country_name").orderBy(col("popularity").desc())
+
+    popular_movie_by_country_df = (
+        input_df.select("production_country_name", "original_title", "popularity") \
+            .withColumn("rank", row_number().over(window_country))
+            .filter(col("rank") == 1)
+            .drop("rank")
+    )    
     return popular_movie_by_country_df
 
-
 display(popular_movie_by_country(df))
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## 6. Movies by release year
+
+# COMMAND ----------
+
+from pyspark.sql.functions import year
+
+def moviesByYear(input_df: DataFrame) -> DataFrame:
+    return input_df.select("id","release_year").distinct().groupBy("release_year").count()
+
+display(moviesByYear(df))
