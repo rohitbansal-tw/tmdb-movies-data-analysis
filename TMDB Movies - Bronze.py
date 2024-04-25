@@ -1,12 +1,16 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC ## Movie Processing - Bronze
+# MAGIC ## Notebook Setup - Bronze
 
 # COMMAND ----------
 
 # MAGIC %pip uninstall -y databricks_helpers exercise_ev_databricks_unit_tests
 # MAGIC %pip install git+https://github.com/data-derp/databricks_helpers#egg=databricks_helpers
 # MAGIC %pip install pandas
+
+# COMMAND ----------
+
+# MAGIC %run ./e2e_tests/movie_analysis_bronze
 
 # COMMAND ----------
 
@@ -84,17 +88,9 @@ dbutils.fs.ls(f"{working_directory}/output/")
 
 # COMMAND ----------
 
-# MAGIC %run ./e2e_tests/movie_analysis_bronze
-
-# COMMAND ----------
-
 # MAGIC %md
 # MAGIC ## E2E Tests
 
 # COMMAND ----------
 
-test_write_e2e(dbutils.fs.ls(f"{working_directory}/output"), spark, display)
-
-# COMMAND ----------
-
-
+test_write_parquet(dbutils.fs.ls(f"{working_directory}/output"), spark, display)

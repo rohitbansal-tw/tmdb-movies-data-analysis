@@ -2,7 +2,7 @@
 from pyspark.sql import DataFrame
 
 
-def test_write_e2e(file_path: DataFrame, spark, display_f, **kwargs):
+def test_write_parquet(file_path: DataFrame, spark, display_f, **kwargs):
     result = spark.createDataFrame(file_path)
     display_f(result)
     

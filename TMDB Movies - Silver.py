@@ -1,6 +1,28 @@
 # Databricks notebook source
+# MAGIC %md
+# MAGIC ## Notebook Setup - Silver
+
+# COMMAND ----------
+
 # MAGIC %pip uninstall -y databricks_helpers exercise_ev_databricks_unit_tests
 # MAGIC %pip install git+https://github.com/data-derp/databricks_helpers#egg=databricks_helpers git+https://github.com/data-derp/exercise_ev_databricks_unit_tests#egg=exercise_ev_databricks_unit_tests
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### Import unit and e2e tests
+
+# COMMAND ----------
+
+# MAGIC %pip install great-expectations
+
+# COMMAND ----------
+
+# MAGIC %run ./unit_tests/movie_analysis_silver
+
+# COMMAND ----------
+
+# MAGIC %run ./e2e_tests/movie_analysis_silver
 
 # COMMAND ----------
 
@@ -40,6 +62,11 @@ display(df)
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC ## Clean-up data
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC ### Fix data types on movie schema columns
 
 # COMMAND ----------
@@ -47,21 +74,24 @@ display(df)
 from pyspark.sql import *
 from pyspark.sql.functions import *
 
-df_cleaned = df \
-    .withColumn("id", df.id.cast("integer")) \
-    .withColumn("budget", df.budget.cast("integer")) \
-    .withColumn("runtime", df.runtime.cast("double")) \
-    .withColumn("revenue", df.revenue.cast("integer")) \
-    .withColumn("release_date", to_timestamp("release_date")) \
-    .withColumn("vote_average", df.vote_average.cast("double")) \
-    .withColumn("vote_count", df.vote_count.cast("integer"))
+def fix_data_types_on_movie_schema(input_df: DataFrame) -> DataFrame:
+    return input_df \
+        .withColumn("id", input_df.id.cast("integer")) \
+        .withColumn("budget", input_df.budget.cast("integer")) \
+        .withColumn("runtime", input_df.runtime.cast("double")) \
+        .withColumn("revenue", input_df.revenue.cast("integer")) \
+        .withColumn("release_date", to_timestamp("release_date")) \
+        .withColumn("vote_average", input_df.vote_average.cast("double")) \
+        .withColumn("vote_count", input_df.vote_count.cast("integer"))
 
-display(df_cleaned)
+output_df = df\
+    .transform(fix_data_types_on_movie_schema)
+display(output_df)
 
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## Flatten movie genres
+# MAGIC ### Flatten movie genres
 
 # COMMAND ----------
 
@@ -85,13 +115,55 @@ def flatten_genres(input_df: DataFrame) -> DataFrame:
         .withColumn("genre_name", df_exploded["genre"]["name"]) \
         .drop("genres_array", "genre")
 
-df_cleaned = df_cleaned.transform(flatten_genres)
-display(df_cleaned)
+output_df = df\
+    .transform(fix_data_types_on_movie_schema)\
+    .transform(flatten_genres)
+
+display(output_df)
 
 # COMMAND ----------
 
-# MAGIC %run ./unit_tests/movie_analysis_silver
+# MAGIC %md
+# MAGIC #### Run unit tests
 
 # COMMAND ----------
 
 test_flatten_genres(spark, flatten_genres)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Write result to parquet in output dir
+
+# COMMAND ----------
+
+out_dir = f"{working_directory}/output"
+print(out_dir)
+
+# COMMAND ----------
+
+def write_to_parquet(input_df: DataFrame):
+    output_directory = f"{out_dir}"
+    input_df.\
+        write.\
+        mode("overwrite").\
+        parquet(output_directory)
+
+write_to_parquet(output_df)
+
+display(spark.createDataFrame(dbutils.fs.ls(f"{out_dir}")))
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Data Validation
+
+# COMMAND ----------
+
+# MAGIC %md 
+# MAGIC Run data validation checks e2e for following:
+# MAGIC * "id" is unique
+
+# COMMAND ----------
+
+run_data_validation(f"{working_directory}/output", spark, display)
