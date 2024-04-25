@@ -5,4 +5,4 @@ local/
 .idea/
 
 # Some temp files when running databricks were getting generated
-rohit.bansal/
+*/tmp/
