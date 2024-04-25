@@ -14,9 +14,8 @@ def validate_id(input_df: SparkDFDataset, display_f):
     result = input_df.expect_column_values_to_not_be_null("id")
     __check_result(result, display_f)
 
-    # id is not unique because of unpacking json array into multiple rows
-    # result = input_df.expect_column_values_to_be_unique("id")
-    # __check_result(result, display_f)
+    result = input_df.expect_column_values_to_be_unique("id")
+    __check_result(result, display_f)
 
 def validate_status(input_df: SparkDFDataset, display_f):
     print("Validating 'status' column ...")

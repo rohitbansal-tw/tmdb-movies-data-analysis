@@ -91,6 +91,49 @@ display(output_df)
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC ## Write result to parquet in output dir
+
+# COMMAND ----------
+
+out_dir = f"{working_directory}/output"
+print(out_dir)
+
+# COMMAND ----------
+
+def write_to_parquet(input_df: DataFrame):
+    output_directory = f"{out_dir}"
+    input_df.\
+        write.\
+        mode("overwrite").\
+        parquet(output_directory)
+
+write_to_parquet(output_df)
+
+display(spark.createDataFrame(dbutils.fs.ls(f"{out_dir}")))
+
+# COMMAND ----------
+
+# MAGIC %md 
+# MAGIC Run data validation checks e2e for following:
+# MAGIC * "id" is unique
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Data Validation
+
+# COMMAND ----------
+
+run_data_validation(f"{working_directory}/output", spark, display)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Unpack and flatten JSON values
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC ### Flatten movie genres
 
 # COMMAND ----------
@@ -129,41 +172,3 @@ display(output_df)
 # COMMAND ----------
 
 test_flatten_genres(spark, flatten_genres)
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## Write result to parquet in output dir
-
-# COMMAND ----------
-
-out_dir = f"{working_directory}/output"
-print(out_dir)
-
-# COMMAND ----------
-
-def write_to_parquet(input_df: DataFrame):
-    output_directory = f"{out_dir}"
-    input_df.\
-        write.\
-        mode("overwrite").\
-        parquet(output_directory)
-
-write_to_parquet(output_df)
-
-display(spark.createDataFrame(dbutils.fs.ls(f"{out_dir}")))
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## Data Validation
-
-# COMMAND ----------
-
-# MAGIC %md 
-# MAGIC Run data validation checks e2e for following:
-# MAGIC * "id" is unique
-
-# COMMAND ----------
-
-run_data_validation(f"{working_directory}/output", spark, display)
